@@ -7,7 +7,7 @@
 @mkdir obj
 @mkdir bin
 
-cl /MP8 /Zi /EHsc /Fo"./obj/" /Fe"./bin/test_opened.exe" /DWEBVIEW_EDGE /DWIN32 /D_DEBUG /DUNICODE /D_UNICODE /MTd OpenedFiles.cpp Utils.cpp Advapi32.lib User32.lib ole32.lib Kernel32.lib Psapi.lib
+cl /MP8 /Zi /EHsc /Fo"./obj/" /Fe"./bin/test_opened.exe" /D_TEST_LSOF_WIN32 /DWIN32 /D_DEBUG /DUNICODE /D_UNICODE /MTd OpenedFiles.cpp Utils.cpp Advapi32.lib User32.lib ole32.lib Kernel32.lib Psapi.lib
 
 IF %ERRORLEVEL% NEQ 0 (
 	echo COMPILE ERROR

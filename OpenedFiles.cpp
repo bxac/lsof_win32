@@ -403,6 +403,7 @@ void EnumerateLoadedModules( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR
 	delete pDwId;
 }
 
+#ifdef _TEST_LSOF_WIN32
 void CALLBACK CallBackFunc( OF_INFO_t OpenedFileInfo, UINT_PTR pUserContext )
 {
 	printf("%p %i %ls\n", OpenedFileInfo.hFile, OpenedFileInfo.dwPID, OpenedFileInfo.lpFile);
@@ -412,3 +413,4 @@ int main() {
 	GetFinalPathNameByHandleDef pGetFinalPathNameByHandle = (GetFinalPathNameByHandleDef)GetProcAddress( GetModuleHandle(_T("kernel32.dll")), "GetFinalPathNameByHandleW" );
 	EnumerateOpenedFiles( CString(L""), CallBackFunc, NULL, NULL, pGetFinalPathNameByHandle );
 }
+#endif
