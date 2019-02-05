@@ -7,12 +7,6 @@
 #include "Utils.h"
 #include <Winsvc.h>
 
-#ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
-#endif
-
 // Function resolves the fosedevice name to drive name
 BOOL GetDrive( LPCTSTR pszDosName, CString& csDrive, bool bDriveLetterOnly )
 {
