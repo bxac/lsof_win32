@@ -13,11 +13,12 @@ struct PROCESS_INFO_t
 };
 
 void EnumerateLoadedModules( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR pUserContext );
-void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR pUserContext, HANDLE hDriver, GetFinalPathNameByHandleDef pGetFinalPathNameByHandle );
+int EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR pUserContext, HANDLE hDriver, GetFinalPathNameByHandleDef pGetFinalPathNameByHandle );
 
-extern "C" __declspec(dllexport) void GetOpenedFiles( LPCWSTR lpPath, OF_TYPE Filter, OF_CALLBACK CallBackProc,
+extern "C" __declspec(dllexport) int GetOpenedFiles( LPCWSTR lpPath, OF_TYPE Filter, OF_CALLBACK CallBackProc,
 													  UINT_PTR pUserContext )
 {
+	int cnt = 0;
 	CString csPath = lpPath;
 	csPath.MakeLower();
 	EnableTokenPrivilege( SE_DEBUG_NAME );
@@ -32,8 +33,9 @@ extern "C" __declspec(dllexport) void GetOpenedFiles( LPCWSTR lpPath, OF_TYPE Fi
 		GetFinalPathNameByHandleDef pGetFinalPathNameByHandle = 0;
 		pGetFinalPathNameByHandle = (GetFinalPathNameByHandleDef)GetProcAddress( GetModuleHandle(_T("kernel32.dll")), "GetFinalPathNameByHandleW" );
 		// Now walk all handles
-		EnumerateOpenedFiles( csPath, CallBackProc, pUserContext, NULL, pGetFinalPathNameByHandle );
+		cnt = EnumerateOpenedFiles( csPath, CallBackProc, pUserContext, NULL, pGetFinalPathNameByHandle );
 	}
+	return cnt;
 }
 
 UINT g_CurrentIndex = 0;
@@ -87,10 +89,11 @@ DWORD WINAPI ThreadProc( LPVOID lParam )
 	return 0;
 }
 
-void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR pUserContext, HANDLE hDriver,
+int EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR pUserContext, HANDLE hDriver,
 						   GetFinalPathNameByHandleDef pGetFinalPathNameByHandle ) 
 {
 	int nFileType = XP_FILETYPE;
+	int cnt = 0;
 	OSVERSIONINFO info = { 0 }; 
 	info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&info); 
@@ -116,7 +119,7 @@ void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR p
 	if( 0 == NtQuerySystemInformation )
 	{
 		OutputDebugString( L"Getting proc of NtQuerySystemInformation failed" );
-		return;
+		return cnt;
 	}
 
 	// Get the list of all handles in the system
@@ -128,7 +131,7 @@ void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR p
 	{
 		if( 0 == needed )
 		{
-			return;// some other error
+			return cnt;// some other error
 		}
 		// The previously supplied buffer wasn't enough.
 		delete pSysHandleInformation;
@@ -139,7 +142,7 @@ void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR p
 		{
 			// some other error so quit.
 			delete pSysHandleInformation;
-			return;
+			return cnt;
 		}
 	}
 
@@ -189,6 +192,7 @@ void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR p
 			stOFInfo.lpFile = csFileName;
 			stOFInfo.hFile  = (HANDLE)pSysHandleInformation->Handles[g_CurrentIndex - 1].wValue;
 			CallBackProc( stOFInfo, pUserContext );
+			cnt++;
 		}
 		if( ThreadHandle )
 		{
@@ -200,7 +204,7 @@ void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR p
 		}
 		CloseHandle( ThreadParams.hStartEvent );
 		CloseHandle( ThreadParams.hFinishedEvent );
-		return;
+		return cnt;
 	}
 
 	// Walk through the handle list
@@ -251,7 +255,7 @@ void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR p
 		}		
 		else
 		{
-			return;
+			return cnt;
 		}
 
 
@@ -293,9 +297,11 @@ void EnumerateOpenedFiles( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR p
 		stOFInfo.lpFile = csFileName;
 		stOFInfo.hFile  = (HANDLE)sh.wValue;
 		CallBackProc( stOFInfo, pUserContext );
+		cnt++;
 	}
 	delete pSysHandleInformation;
 
+	return cnt;
 }
 
 
