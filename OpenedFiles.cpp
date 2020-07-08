@@ -333,7 +333,7 @@ void EnumerateLoadedModules( CString& csPath, OF_CALLBACK CallBackProc, UINT_PTR
 		pDwId = (PDWORD)new BYTE[dwsize];
 	}
 	int nCount = dwRetruned / sizeof(DWORD);
-	int nItemCount = -1;
+	// int nItemCount = -1;
 	// Enumerate modules of the above process
 	for( int nIdx = 0; nIdx < nCount;nIdx++ )
 	{    
